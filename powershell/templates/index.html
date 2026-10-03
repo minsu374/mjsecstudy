@@ -35,13 +35,13 @@
 
     <div class="movie-grid" id="movieGrid">
         {% for movie in movies %}
-        <div class="card" data-id="{{ movie.id }}" data-title="{{ movie.title }}" onclick="alert('{{ movie.title }}\n\n개봉일: {{ movie.release_date }}\n평점: ⭐ {{ movie.vote_average }}')">
+        <div class="card" data-id="{{ movie.id }}" data-title="{{ movie.title }}" data-date="{{ movie.release_date }}" data-vote="{{ movie.vote_average }}" onclick="showDetail(this)">
             <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}">
             <div class="card-body">
                 <h3 class="card-title">{{ movie.title }}</h3>
                 <div class="card-footer">
                     <span class="vote">⭐ {{ movie.vote_average }}</span>
-                    <button class="fav-btn" onclick="toggleFavorite(event, {{ movie.id }})">🤍 찜하기</button>
+                    <button class="fav-btn" onclick="toggleFavorite(event, this)">🤍 찜하기</button>
                 </div>
             </div>
         </div>
@@ -66,8 +66,17 @@
             });
         }
 
-        function toggleFavorite(event, id) {
-            event.stopPropagation(); // 카드 클릭(알림창) 이벤트 방지
+        function showDetail(card) {
+            const title = card.dataset.title;
+            const date = card.dataset.date;
+            const vote = card.dataset.vote;
+            alert(`${title}\n\n개봉일: ${date}\n평점: ⭐ ${vote}`);
+        }
+
+        function toggleFavorite(event, btn) {
+            event.stopPropagation();
+            const card = btn.closest('.card');
+            const id = parseInt(card.dataset.id);
             if (favorites.includes(id)) {
                 favorites = favorites.filter(favId => favId !== id);
             } else {
@@ -107,7 +116,6 @@
             filterMovies();
         }
 
-        // 페이지 로드 시 찜 상태 반영
         updateFavButtons();
     </script>
 </body>
