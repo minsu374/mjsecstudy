@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>TMDB 영화 검색 및 찜 목록</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background-color: #141414; color: white; margin: 0; padding: 20px; }
+        header { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 30px; }
+        h1 { color: #e50914; margin: 0; }
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 600px; }
+        input[type="text"] { flex: 1; padding: 10px 15px; border-radius: 20px; border: none; outline: none; font-size: 16px; min-width: 200px; }
+        button { padding: 10px 20px; border-radius: 20px; border: none; background-color: #e50914; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #b80710; }
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .card { background-color: #222; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.5); position: relative; transition: transform 0.2s; cursor: pointer; }
+        .card:hover { transform: scale(1.03); }
+        .card img { width: 100%; height: 300px; object-fit: cover; }
+        .card-body { padding: 15px; }
+        .card-title { font-size: 1.1em; margin: 0 0 10px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; }
+        .vote { color: #f3ce13; font-weight: bold; }
+        .fav-btn { background: none; border: 1px solid #ff4757; color: #ff4757; padding: 5px 10px; border-radius: 12px; cursor: pointer; font-size: 12px; }
+        .fav-btn.active { background-color: #ff4757; color: white; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎬 영화 검색 및 찜 목록</h1>
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="영화 제목 검색..." onkeyup="filterMovies()">
+            <button id="toggleFavBtn" onclick="toggleFavView()">❤️ 찜한 영화만 보기</button>
+        </div>
+    </header>
+
+    <div class="movie-grid" id="movieGrid">
+        {% for movie in movies %}
+        <div class="card" data-id="{{ movie.id }}" data-title="{{ movie.title }}" onclick="alert('{{ movie.title }}\n\n개봉일: {{ movie.release_date }}\n평점: ⭐ {{ movie.vote_average }}')">
+            <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}">
+            <div class="card-body">
+                <h3 class="card-title">{{ movie.title }}</h3>
+                <div class="card-footer">
+                    <span class="vote">⭐ {{ movie.vote_average }}</span>
+                    <button class="fav-btn" onclick="toggleFavorite(event, {{ movie.id }})">🤍 찜하기</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        let favorites = JSON.parse(localStorage.getItem('fav_movies') || '[]');
+        let showFavOnly = false;
+
+        function updateFavButtons() {
+            document.querySelectorAll('.card').forEach(card => {
+                const id = parseInt(card.dataset.id);
+                const btn = card.querySelector('.fav-btn');
+                if (favorites.includes(id)) {
+                    btn.classList.add('active');
+                    btn.innerText = '❤️ 찜완료';
+                } else {
+                    btn.classList.remove('active');
+                    btn.innerText = '🤍 찜하기';
+                }
+            });
+        }
+
+        function toggleFavorite(event, id) {
+            event.stopPropagation(); // 카드 클릭(알림창) 이벤트 방지
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(favId => favId !== id);
+            } else {
+                favorites.push(id);
+            }
+            localStorage.setItem('fav_movies', JSON.stringify(favorites));
+            updateFavButtons();
+            if (showFavOnly) filterMovies();
+        }
+
+        function filterMovies() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('.card').forEach(card => {
+                const title = card.dataset.title.toLowerCase();
+                const id = parseInt(card.dataset.id);
+                const matchesSearch = title.includes(query);
+                const matchesFav = !showFavOnly || favorites.includes(id);
+
+                if (matchesSearch && matchesFav) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function toggleFavView() {
+            showFavOnly = !showFavOnly;
+            const btn = document.getElementById('toggleFavBtn');
+            if (showFavOnly) {
+                btn.innerText = '🎬 전체 보기';
+                btn.style.backgroundColor = '#555';
+            } else {
+                btn.innerText = '❤️ 찜한 영화만 보기';
+                btn.style.backgroundColor = '#e50914';
+            }
+            filterMovies();
+        }
+
+        // 페이지 로드 시 찜 상태 반영
+        updateFavButtons();
+    </script>
+</body>
+</html>
