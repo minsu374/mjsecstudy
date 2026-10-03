@@ -17,7 +17,6 @@ def home():
 
     all_movies = []
     
-    # 1페이지부터 5페이지까지 총 100개의 영화 데이터를 불러옵니다.
     for page in range(1, 6):
         url = f"https://api.themoviedb.org/3/movie/popular?language=ko-KR&page={page}"
         response = requests.get(url, headers=headers)
